@@ -1,0 +1,13 @@
+[Unit]
+Description=Fetch blocks
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=43200
+User=fba
+WorkingDirectory=/opt/fedi-block-api
+ExecStart=/opt/fedi-block-api/bin/python3 fetch_blocks.py mastodon.social
+
+[Install]
+WantedBy=multi-user.target
