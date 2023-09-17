@@ -1,0 +1,4 @@
+blocks.db
+__pycache__/
+venv/
+config.json

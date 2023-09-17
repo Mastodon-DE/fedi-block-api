@@ -1,0 +1,13 @@
+[Unit]
+Description=Fedi block API
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=10
+User=fba
+WorkingDirectory=/opt/fedi-block-api
+ExecStart=python3 api.py
+
+[Install]
+WantedBy=multi-user.target

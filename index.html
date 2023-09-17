@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<head>
+    <title>fedi-block-api{% if domain %} {{domain}}{% endif %}</title>
+    <style>
+        body {
+            background-color: #000022;
+            color: #ffffff;
+            text-align: center;
+            font-family: "Open Sans", "Roboto", sans-serif;
+        }
+        .block_level {
+            background-color: #1c1c3c;
+            width: 80em;
+            padding: 5px;
+            margin: auto;
+            margin-top: 10px;
+        }
+        .scoreboard {
+            background-color: #1c1c3c;
+            width: 40em;
+            padding: 5px;
+            margin: auto;
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            background-color: #2d2d4d;
+            border-spacing: 0px;
+        }
+        table tr:nth-of-type(2n) {
+            background-color: #1c1c3c;
+        }
+        table td {
+            padding: 4px;
+        }
+        .block_level table td:nth-of-type(1), .block_level table td:nth-of-type(2),
+        .block_level table td:nth-of-type(4), .block_level table td:nth-of-type(5) {
+            white-space: nowrap;
+        }
+        .block_level table td:nth-of-type(2) a, .scoreboard table td:nth-of-type(2) a {
+            white-space: pre-wrap;
+            word-wrap: anywhere;
+        }
+        .block {
+            background-color: #2d2d4d;
+            padding: 5px;
+            margin: 5px;
+        }
+        a {
+            color: #ffffff;
+        }
+        a.listlink {
+            text-decoration: none;
+            font-size: 0.8em;
+        }
+        .info {
+            margin-top: 25px;
+        }
+        input[type="text"], input[type="submit"] {
+            padding: 5px;
+            border-radius: 5px;
+            color: white;
+            background: #445;
+            font-size: 16px;
+        }
+
+        input[type="text"]:hover {
+            border-color: #f08;
+        }
+
+        input[type="submit"] {
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            border-color: #f08;
+        }
+
+        span[title] {
+            text-decoration: underline dotted;
+        }
+
+        textarea[name="reason"] {
+            color: #ffffff;
+            background: transparent;
+            border: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    {% if scoreboard %}
+        {% if blockers %}
+            <h1>Top {{blockers}} defederating instances</h1>
+        {% elif blocked %}
+            <h1>Top {{blocked}} defederated instances</h1>
+        {% endif %}
+        <div class="scoreboard">
+            <table>
+                <th>№</th>
+                <th>Instance</th>
+                <th>Defederations</th>
+                {% for entry in scores %}
+                    <tr>
+                        <td>{{loop.index}}</td>
+                        <td>
+                            <img src="https://proxy.duckduckgo.com/ip3/{{entry['domain']}}.ico" width=16/>
+                            <b><a href="../?{% if blockers %}reverse{% elif blocked %}domain{% endif %}={{entry['domain']}}" rel="nofollow noopener noreferrer">{{entry['domain']}}</a></b>&nbsp;
+                            <a class="listlink" href="https://{{entry['domain']}}">↗</a>
+                        </td>
+                        <td>{{entry['highscore']}}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% elif weighted %}
+        <h1>Top 100 defederated instances (weighted)</h1>
+        <p>Weighted score makes instances with lots of blocks count less than instances with fewer blocks.<br />
+        This might provide more objective results by accounting the obvious bias from schizo instances whose block count is in thousands.</p>
+        <div class="scoreboard">
+            <table>
+                <th>№</th>
+                <th>Instance</th>
+                <th>Defederations</th>
+                <th>Weighted score</th>
+                {% for entry in scores %}
+                    <tr>
+                        <td>{{loop.index}}</td>
+                        <td>
+                            <img src="https://proxy.duckduckgo.com/ip3/{{entry['domain']}}.ico" width=16/>
+                            <b><a href="../?domain={{entry['domain']}}" rel="nofollow noopener noreferrer">{{entry['domain']}}</a></b>&nbsp;
+                            <a class="listlink" href="https://{{entry['domain']}}">↗</a>
+                        </td>
+                        <td>{{entry['blocks']}}</td>
+                        <td>{{entry['weight']}}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <p>Thanks, pwm!</p>
+    {% elif reason or domain or reverse %}
+        {% if reason %}
+            <h1>Instances that use "{{reason}}" in their reason</h1>
+        {% elif reverse %}
+            <h1>Instances that are blocked by {{reverse}}</h1>
+        {% elif domain %}
+            <h1>Instances that block {{domain}}</h1>
+        {% endif %}
+        {% for block_level in blocks %}
+            <div class="block_level" id="{{block_level}}">
+                <h2>{{block_level}} ({{blocks[block_level]|length}})</h2>
+                <table>
+                    <th>Blocker</th>
+                    <th>{% if block_level == 'accept' %}Accepted{% else %}Blocked{% endif %}</th>
+                    <th>Reason</th>
+                    <th>First added</th>
+                    <th>Last seen</th>
+                    {% for block in blocks[block_level] %}
+                        <tr>
+                            <td>
+                                <img src="https://proxy.duckduckgo.com/ip3/{{block['blocker']}}.ico" width=16/>
+                                <b><a href="https://{{block['blocker']}}" rel="nofollow noopener noreferrer">{{block['blocker']}}</a></b>
+                                {% if reason or domain %}<a class="listlink" href="./?reverse={{block['blocker']}}">↘</a>{% endif %}
+                            </td>
+                            <td>
+                                <img src="https://proxy.duckduckgo.com/ip3/{{domain or block['blocked']}}.ico" width=16/>
+                                <b><a href="https://{{domain or block['blocked']}}" rel="nofollow noopener noreferrer">{{block['blocked']}}</a></b>
+                                {% if reason or reverse %}<a class="listlink" href="./?domain={{domain or block['blocked']}}">↘</a>{% endif %}
+                            </td>
+                            <td>
+                                <textarea name="reason" cols="60" rows="1" readonly>{{block['reason']}}</textarea>
+                            </td>
+                            <td>{{block['first_added']}}</td>
+                            <td>{{block['last_seen']}}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        {% endfor %}
+    {% else %}
+        <h1>Enter a Domain</h1>
+        <form>
+            <input type="text" name="domain" placeholder="example.com" />
+            <input type="submit" value="Submit" />
+        </form>
+        <h1>Enter a Reason</h1>
+        <form>
+            <input type="text" name="reason" placeholder="free speech" />
+            <input type="submit" value="Submit" />
+        </form>
+        <h1>Reverse search</h1>
+        <form>
+            <input type="text" name="reverse" placeholder="example.com" />
+            <input type="submit" value="Submit" />
+        </form>
+        <p>
+            <a href="./scoreboard?blockers=50">top 50 defederating</a> / <a href="./scoreboard?blocked=50">defederated instances</a> // <a href="./weighted">weighted scoreboard</a>
+        </p>
+        <div class="info">
+            known instances: {{info.known_instances}}<br/>
+            indexed instances: {{info.indexed_instances}}<br/>
+            blocks recorded: {{info.blocks_recorded}}<br/>
+            [REDACTED]<br/>
+            [REDACTED]<br/>
+            [REDACTED]
+        </div>
+    {% endif %}
+</body>
+</html>

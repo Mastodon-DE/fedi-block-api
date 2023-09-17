@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+ <title>fedi-block-api{% if domain %} {{domain}}{% endif %}</title>
+ <description>Feed of latest blocks{% if domain %} for {{domain}}{% endif %} from fedi-block-api</description>
+ <pubDate>{{timestamp}}</pubDate>
+ <ttl>1800</ttl>
+ {% for block in blocks %}
+ <item>
+  <title>{{block['blocker']}} has applied '{{block['block_level']}}' restriction to {{block['blocked']}}</title>
+  <description>{{block['reason']}}</description>
+  <link>https://fba.ryona.agency/?reverse={{block['blocker']}}</link>
+  <pubDate>{{block['first_added']}}</pubDate>
+ </item>
+ {% endfor %}
+</channel>
+</rss>
