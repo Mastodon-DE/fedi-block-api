@@ -43,4 +43,4 @@ This Project is licensed und the AGPLv3 License as indicated by the LICENSE file
 
 ### License history
 
-This project WAS "licensed" under the [AGPLv3+NIGGER](https://plusnigger.autism.exposed/) License but as this License violates the Copyright of the Free Software Foundation we have decided that omitting the part in violation of their copyright is enough to be able to use the license.
+This project WAS "licensed" under the [AGPLv3+[REDACTED]](https://gitgud.io/mintplg/fedi-block-api/-/blob/master/LICENSE?ref_type=heads) License but as this License violates the Copyright of the Free Software Foundation we have decided that omitting the part in violation of their copyright is enough to be able to use the license.
