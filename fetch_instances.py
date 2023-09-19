@@ -9,7 +9,7 @@ with open("config.json") as f:
 
 domain = sys.argv[1]
 
-blacklist = [
+blacklist = {
     "activitypub-troll.cf",
     "gab.best",
     "4chan.icu",
@@ -17,7 +17,7 @@ blacklist = [
     "mastotroll.netz.org",
     "github.dev",
     "ngrok.io"
-]
+}
 
 headers = {
     "user-agent": config["useragent"]
@@ -73,7 +73,13 @@ c.execute(
 for instance in peerlist:
     instance = instance.lower()
 
-    if instance in blacklist:
+    blacklisted = False
+    for domain in blacklist:
+        if domain in instance:
+            blacklisted = True
+
+    if blacklisted:
+        print(instance)
         continue
 
     #print(instance) print while iterating over a list with thousands of members are stupid as they are
