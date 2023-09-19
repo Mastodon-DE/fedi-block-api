@@ -79,7 +79,6 @@ for instance in peerlist:
             blacklisted = True
 
     if blacklisted:
-        print(instance)
         continue
 
     #print(instance) print while iterating over a list with thousands of members are stupid as they are
