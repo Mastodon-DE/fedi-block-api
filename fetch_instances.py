@@ -73,12 +73,7 @@ c.execute(
 for instance in peerlist:
     instance = instance.lower()
 
-    blacklisted = False
-    for domain in blacklist:
-        if domain in instance:
-            blacklisted = True
-
-    if blacklisted:
+    if instance in blacklist:
         continue
 
     #print(instance) print while iterating over a list with thousands of members are stupid as they are
@@ -97,3 +92,4 @@ for instance in peerlist:
     except Exception as e:
         print("error:", e, instance)
 conn.close()
+print("Done " + domain)
