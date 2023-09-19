@@ -81,7 +81,9 @@ for instance in peerlist:
     if blacklisted:
         continue
 
-    print(instance)
+    #print(instance) print while iterating over a list with thousands of members are stupid as they are
+    #using up 60% of the cpu they are good for debuggin but after that they are just the very definition of bloat
+    #If you do want to print that use a logger as they are usully programmed to minimize the time needed
     try:
         c.execute(
             "select domain from instances where domain = ?", (instance,)
