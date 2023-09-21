@@ -4,3 +4,4 @@ venv/
 config.json
 /config.json
 /Server
+blocks.BAK.db

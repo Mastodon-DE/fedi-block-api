@@ -1,28 +1,11 @@
 from reqto import get
 from hashlib import sha256
+from multiprocessing import Pool, Lock, cpu_count
 import sqlite3
 import sys
 import json
 
-with open("config.json") as f:
-    config = json.loads(f.read())
-
-domain = sys.argv[1]
-
-blacklist = [
-    "activitypub-troll.cf",
-    "gab.best",
-    "4chan.icu",
-    "social.shrimpcam.pw",
-    "mastotroll.netz.org",
-    "github.dev",
-    "ngrok.io"
-]
-
-headers = {
-    "user-agent": config["useragent"]
-}
-
+mutex = Lock()
 
 def get_hash(domain: str) -> str:
     return sha256(domain.encode("utf-8")).hexdigest()
@@ -35,7 +18,6 @@ def get_peers(domain: str) -> str:
     except:
         return None
 
-peerlist = get_peers(domain)
 
 def get_type(instdomain: str) -> str:
     try:
@@ -62,43 +44,78 @@ def get_type(instdomain: str) -> str:
     except:
         return None
 
+def write_instance(instance: str, c) -> None:
+    print("run")
+    try:
+        with mutex:
+            c.execute(
+                "select domain from instances where domain = ?", (instance,)
+            )
+        if c.fetchone() == None:
+            InstType = get_type(instance)
+            InstHash = get_hash(instance)
+            with mutex:
+                c.execute(
+                    "insert into instances select ?, ?, ?",
+                    (instance, InstHash, InstType),
+                )
+            with mutex:
+                conn.commit()
+    except Exception as e:
+        print("error:", e, instance)
+
+with open("config.json") as f:
+    config = json.loads(f.read())
+
+domain = sys.argv[1]
+
+blacklist = [
+    "activitypub-troll.cf",
+    "gab.best",
+    "4chan.icu",
+    "social.shrimpcam.pw",
+    "mastotroll.netz.org",
+    "github.dev",
+    "ngrok.io"
+]
+
+headers = {
+    "user-agent": config["useragent"]
+}
+
+peerlist = get_peers(domain)
 
 conn = sqlite3.connect("blocks.db")
+
 c = conn.cursor()
 
 c.execute(
     "select domain from instances where 1"
 )
 
+Pool
+
 for instance in peerlist:
     instance = instance.lower()
 
-    
     blacklisted = False
-    for domain in blacklist:
-        if domain in instance:
+    for ddomain in blacklist:
+        if ddomain in instance:
             blacklisted = True
 
     if blacklisted:
-        #print(instance)
         continue
 
-    #if instance in blacklist:
-    #    continue
+    #p = Process(target=write_instance, args=[instance, c])
+    #p.start()
+    #Funny story about that
+    #Thats a fork bomb do not run that
+    #Except for lolz thats why I didnt delete it
 
-    #print(instance)
-    try:
-        c.execute(
-            "select domain from instances where domain = ?", (instance,)
-        )
-        if c.fetchone() == None:
-            c.execute(
-                "insert into instances select ?, ?, ?",
-                (instance, get_hash(instance), get_type(instance)),
-            )
-        conn.commit()
-    except Exception as e:
-        print("error:", e, instance)
+    #write_instance(instance, c)
+    #DEBUG PLEASE REMOVE AFTER USE
+    #print(instance) #REMOVE AFTER USE OR PERFOMANCE IS GONNA TANK
+    #DEBUG PLEASE REMOVE AFTER USE
 
 conn.close()
 print("done " + domain)
