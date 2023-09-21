@@ -1,6 +1,6 @@
 from reqto import get
 from hashlib import sha256
-from multiprocessing import Pool, Lock, cpu_count
+from multiprocessing import Pool, Lock, cpu_count #Processs
 import sqlite3
 import sys
 import json
@@ -112,6 +112,8 @@ for instance in peerlist:
 
     if blacklisted:
         continue
+
+    p = pool.apply_async(write_instance, args=[instance, c])
 
     #p = Process(target=write_instance, args=[instance, c])
     #p.start()
