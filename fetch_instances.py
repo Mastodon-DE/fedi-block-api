@@ -93,7 +93,14 @@ c.execute(
     "select domain from instances where 1"
 )
 
-Pool
+pool = Pool(cpu_count() - 1)
+
+#This one will create a pool of processes
+#With the same number as cpus on the host
+#But minus 1 for the os
+#This should hopefully fix accidentally
+#creating forkbombs and crashing the kernel
+#(it was fun though)
 
 for instance in peerlist:
     instance = instance.lower()
