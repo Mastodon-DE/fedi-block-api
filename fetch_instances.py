@@ -59,15 +59,15 @@ async def get_response_code(host:str) -> int:
 
 
 
-def write_instance(instance: str, c) -> bool:
+async def write_instance(instance: str, c) -> bool:
     print("run")
     try:
         c.execute(
             "select domain from instances where domain = ?", (instance,)
         )
         if c.fetchone() == None:
-            InstType = get_type(instance)
-            InstHash = get_hash(instance)
+            InstType = await get_type(instance)
+            InstHash = await get_hash(instance)
             c.execute(
                 "insert into instances select ?, ?, ?",
                 (instance, InstHash, InstType),
@@ -87,7 +87,7 @@ async def main():
     peerlist =  await get_peers(domain)
     blacklist = [ "activitypub-troll.cf","gab.best","4chan.icu","social.shrimpcam.pw","mastotroll.netz.org","github.dev", "ngrok.io"]
     async with asyncio.TaskGroup() as tg:
-        for peer in peerlist[:1000]:
+        for peer in peerlist[:10]: #TODO: Remove slice after debugging
             instance = instance.lower()
             blacklisted = False
             for ddomain in blacklist:
@@ -95,8 +95,8 @@ async def main():
                     blacklisted = True
             if blacklisted:
                 continue
-    conn.close()
             #tg.create_task(get_response_code(peer))
+    conn.close()
 
 
 
