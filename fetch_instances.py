@@ -8,8 +8,8 @@ import sqlite3
 import sys
 import json
 
-def get_hash(domain: str) -> str:
-    return sha256(domain.encode("utf-8")).hexdigest()
+async def get_hash(domain: str) -> str:
+    return await sha256(domain.encode("utf-8")).hexdigest()
 
 
 async def get_peers(domain: str) -> str:
@@ -24,29 +24,32 @@ async def get_peers(domain: str) -> str:
         return None
 
 
-def get_type(instdomain: str, headers) -> str:
+async def get_type(instdomain: str, headers) -> str:
     try:
-        res = get(f"https://{instdomain}/nodeinfo/2.1.json", headers=headers, timeout=5, allow_redirects=False)
-        if res.status_code == 404:
-            res = get(f"https://{instdomain}/nodeinfo/2.0", headers=headers, timeout=5, allow_redirects=False)
-        if res.status_code == 404:
-            res = get(f"https://{instdomain}/nodeinfo/2.0.json", headers=headers, timeout=5, allow_redirects=False)
-        if res.ok and "text/html" in res.headers["content-type"]:
-            res = get(f"https://{instdomain}/nodeinfo/2.1", headers=headers, timeout=5, allow_redirects=False)
-        if res.ok:
-            if res.json()["software"]["name"] in ["akkoma", "rebased"]:
-                return "pleroma"
-            elif res.json()["software"]["name"] in ["hometown", "ecko"]:
+        async with aiohttp.ClientSession() as session:
+            res = await session.get(f"https://{instdomain}/nodeinfo/2.1.json", headers=headers, timeout=5, allow_redirects=False)
+            if res.status_code == 404:
+                res = await session.get(f"https://{instdomain}/nodeinfo/2.0", headers=headers, timeout=5, allow_redirects=False)
+            if res.status_code == 404:
+                res = await session.get(f"https://{instdomain}/nodeinfo/2.0.json", headers=headers, timeout=5, allow_redirects=False)
+            if res.ok and "text/html" in res.headers["content-type"]:
+                res = await session.get(f"https://{instdomain}/nodeinfo/2.1", headers=headers, timeout=5, allow_redirects=False)
+            if res.ok:
+                resj = await res.json()
+                if resj["software"]["name"] in ["akkoma", "rebased"]:
+                    return "pleroma"
+                elif resj["software"]["name"] in ["hometown", "ecko"]:
+                    return "mastodon"
+                elif resj["software"]["name"] in ["calckey", "groundpolis", "foundkey", "cherrypick", "firefish", "iceshrimp"]:
+                    return "misskey"
+                else:
+                    return res.json()["software"]["name"]
+            elif res.status_code == 404:
+                res = await session.get(f"https://{instdomain}/api/v1/instance", headers=headers, timeout=5, allow_redirects=False)
+            if res.ok:
                 return "mastodon"
-            elif res.json()["software"]["name"] in ["calckey", "groundpolis", "foundkey", "cherrypick", "firefish", "iceshrimp"]:
-                return "misskey"
-            else:
-                return res.json()["software"]["name"]
-        elif res.status_code == 404:
-            res = get(f"https://{instdomain}/api/v1/instance", headers=headers, timeout=5, allow_redirects=False)
-        if res.ok:
-            return "mastodon"
-    except:
+    except Exception as e:
+        print(e)
         return None
 
 
@@ -64,8 +67,8 @@ async def write_instance(instance: str, c) -> bool:
             "select domain from instances where domain = ?", (instance,)
         )
         if c.fetchone() == None:
-            InstType = await get_type(instance)
             InstHash = await get_hash(instance)
+            InstType = await get_type(instance)
             c.execute(
                 "insert into instances select ?, ?, ?",
                 (instance, InstHash, InstType),
