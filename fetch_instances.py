@@ -11,7 +11,6 @@ import json
 async def get_hash(domain: str) -> str:
     return await sha256(domain.encode("utf-8")).hexdigest()
 
-
 async def get_peers(domain: str) -> str:
     try:
         async with aiohttp.ClientSession() as session:
@@ -23,8 +22,7 @@ async def get_peers(domain: str) -> str:
         print(e)
         return None
 
-
-async def get_type(instdomain: str, headers) -> str:
+async def get_type(instdomain: str) -> str:
     try:
         async with aiohttp.ClientSession() as session:
             res = await session.get(f"https://{instdomain}/nodeinfo/2.1.json", headers=headers, timeout=5, allow_redirects=False)
@@ -52,13 +50,10 @@ async def get_type(instdomain: str, headers) -> str:
         print(e)
         return None
 
-
 async def get_response_code(host:str) -> int:
     async with aiohttp.ClientSession() as session:
         res = await session.get(f"https://{host}/nodeinfo/2.1.json")#, headers=headers, timeout=5, allow_redirects=False)
         print(f"got response code {res.status}")
-
-
 
 async def write_instance(instance: str, c) -> bool:
     print("run")
@@ -93,13 +88,15 @@ async def main():
     blacklist = [ "activitypub-troll.cf","gab.best","4chan.icu","social.shrimpcam.pw","mastotroll.netz.org","github.dev", "ngrok.io"]
     async with asyncio.TaskGroup() as tg:
         for peer in peerlist[:10]: #TODO: Remove slice after debugging
-            instance = instance.lower()
+            peer = instance.lower()
             blacklisted = False
             for ddomain in blacklist:
-                if ddomain in instance:
+                if ddomain in peer:
                     blacklisted = True
             if blacklisted:
                 continue
+
+            tg.create_task(write_instance(peer))
             #tg.create_task(get_response_code(peer))
     conn.close()
 
