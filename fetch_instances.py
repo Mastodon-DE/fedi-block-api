@@ -2,6 +2,7 @@
 from hashlib import sha256
 from multiprocessing import Lock, cpu_count, set_start_method, Process #Pool,
 from httpx import AsyncClient
+import json
 import aiohttp
 import asyncio
 import sqlite3
@@ -9,7 +10,8 @@ import sys
 import json
 
 async def get_hash(domain: str) -> str:
-    return await sha256(domain.encode("utf-8")).hexdigest()
+    print("run1.5")
+    return sha256(domain.encode("utf-8")).hexdigest()
 
 async def get_peers(domain: str) -> str:
     try:
@@ -26,14 +28,18 @@ async def get_type(instdomain: str) -> str:
     try:
         async with aiohttp.ClientSession() as session:
             res = await session.get(f"https://{instdomain}/nodeinfo/2.1.json", headers=headers, timeout=5, allow_redirects=False)
-            if res.status_code == 404:
-                res = await session.get(f"https://{instdomain}/nodeinfo/2.0", headers=headers, timeout=5, allow_redirects=False)
-            if res.status_code == 404:
-                res = await session.get(f"https://{instdomain}/nodeinfo/2.0.json", headers=headers, timeout=5, allow_redirects=False)
+            if res.status == 404:
+                res  = await session.get(f"https://{instdomain}/nodeinfo/2.0", headers=headers, timeout=5, allow_redirects=False)
+            if res.status == 404:
+                res  = await session.get(f"https://{instdomain}/nodeinfo/2.0.json", headers=headers, timeout=5, allow_redirects=False)
             if res.ok and "text/html" in res.headers["content-type"]:
                 res = await session.get(f"https://{instdomain}/nodeinfo/2.1", headers=headers, timeout=5, allow_redirects=False)
             if res.ok:
-                resj = await res.json()
+                try:
+                    resj = await res.json()
+                except aiohttp.ContentTypeError:
+                    data = await res.read()
+                    resj = json.loads(data)
                 if resj["software"]["name"] in ["akkoma", "rebased"]:
                     return "pleroma"
                 elif resj["software"]["name"] in ["hometown", "ecko"]:
@@ -41,12 +47,13 @@ async def get_type(instdomain: str) -> str:
                 elif resj["software"]["name"] in ["calckey", "groundpolis", "foundkey", "cherrypick", "firefish", "iceshrimp"]:
                     return "misskey"
                 else:
-                    return res.json()["software"]["name"]
-            elif res.status_code == 404:
+                    return resj["software"]["name"]
+            elif res.status == 404:
                 res = await session.get(f"https://{instdomain}/api/v1/instance", headers=headers, timeout=5, allow_redirects=False)
             if res.ok:
                 return "mastodon"
     except Exception as e:
+        print("Error")
         print(e)
         return None
 
@@ -62,8 +69,11 @@ async def write_instance(instance: str, c) -> bool:
             "select domain from instances where domain = ?", (instance,)
         )
         if c.fetchone() == None:
+            print("run1")
             InstHash = await get_hash(instance)
+            print("run2")
             InstType = await get_type(instance)
+            print("run3")
             c.execute(
                 "insert into instances select ?, ?, ?",
                 (instance, InstHash, InstType),
@@ -78,6 +88,7 @@ async def main():
     global config
     global headers
     global domain
+    global conn
     with open("config.json") as f:
         config = json.loads(f.read())
     headers    = {"user-agent": config["useragent"]}

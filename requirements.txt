@@ -6,3 +6,5 @@ jinja2
 eventlet
 reqto
 aiohttp
+aiodns
+cchardet
