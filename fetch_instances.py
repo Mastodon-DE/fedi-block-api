@@ -96,7 +96,7 @@ async def main():
             if blacklisted:
                 continue
 
-            tg.create_task(write_instance(peer))
+            tg.create_task(write_instance(peer, c))
             #tg.create_task(get_response_code(peer))
     conn.close()
 
