@@ -8,8 +8,6 @@ import sqlite3
 import sys
 import json
 
-#set_start_method("spawn")
-
 def get_hash(domain: str) -> str:
     return sha256(domain.encode("utf-8")).hexdigest()
 
@@ -78,10 +76,14 @@ async def write_instance(instance: str, c) -> bool:
     return True
 
 async def main():
+    #Initial importing of Global configurations
+    global config
+    global headers
+    global domain
     with open("config.json") as f:
         config = json.loads(f.read())
-    headers = {"user-agent": config["useragent"]}
-    domain   = "mastodon.de" #sys.argv[1]
+    headers    = {"user-agent": config["useragent"]}
+    domain     = "mastodon.de" #sys.argv[1]
     conn = sqlite3.connect("blocks.db")
     c = conn.cursor()
     peerlist =  await get_peers(domain)
