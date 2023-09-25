@@ -1,6 +1,9 @@
-from reqto import get
+#from reqto import get
 from hashlib import sha256
 from multiprocessing import Lock, cpu_count, set_start_method, Process #Pool,
+from httpx import AsyncClient
+import aiohttp
+import asyncio
 import sqlite3
 import sys
 import json
@@ -11,11 +14,15 @@ def get_hash(domain: str) -> str:
     return sha256(domain.encode("utf-8")).hexdigest()
 
 
-def get_peers(domain: str) -> str:
+async def get_peers(domain: str) -> str:
     try:
-        res = get(f"https://{domain}/api/v1/instance/peers", headers=headers, timeout=5, allow_redirects=False)
-        return res.json()
-    except:
+        async with aiohttp.ClientSession() as session:
+            res  = await session.get(f"https://{domain}/api/v1/instance/peers") #, headers=headers, timeout=5, allow_redirects=False)
+            resj = await res.json()
+            print(resj)
+            return resj
+    except Exception as e:
+        print(e)
         return None
 
 
@@ -44,6 +51,14 @@ def get_type(instdomain: str) -> str:
     except:
         return None
 
+
+async def get_response_code(host:str) -> int:
+    async with aiohttp.ClientSession() as session:
+        res = await session.get(f"https://{host}/nodeinfo/2.1.json")#, headers=headers, timeout=5, allow_redirects=False)
+        print(f"got response code {res.status}")
+
+
+
 def write_instance(instance: str, c) -> bool:
     print("run")
     try:
@@ -65,10 +80,23 @@ def write_instance(instance: str, c) -> bool:
         print("error:", e, instance)
     return True
 
+async def main():
+    domain   = "mastodon.de" #sys.argv[1]
+    peerlist =  await get_peers(domain)
+    async with asyncio.TaskGroup() as tg:
+        for peer in peerlist[:1000]:
+            tg.create_task(get_response_code(peer))
+
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+sys.exit()
+
 with open("config.json") as f:
     config = json.loads(f.read())
 
-domain = "mastodon.de" #sys.argv[1]
 
 blacklist = [
     "activitypub-troll.cf",
@@ -105,6 +133,7 @@ mutex = Lock()
 #creating forkbombs and crashing the kernel
 #(it was fun though)
 
+
 for instance in peerlist:
     instance = instance.lower()
 
@@ -119,8 +148,8 @@ for instance in peerlist:
     #p = pool.apply(write_instance, args=[instance, c])
     #print(p.get())
 
-    p = Process(target=write_instance, args=[instance, c])
-    p.start()
+    #p = Process(target=write_instance, args=[instance, c])
+    #p.start()
     #Funny story about that
     #Thats a fork bomb do not run that
     #Except for lolz thats why I didnt delete it
