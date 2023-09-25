@@ -88,7 +88,7 @@ async def main():
     blacklist = [ "activitypub-troll.cf","gab.best","4chan.icu","social.shrimpcam.pw","mastotroll.netz.org","github.dev", "ngrok.io"]
     async with asyncio.TaskGroup() as tg:
         for peer in peerlist[:10]: #TODO: Remove slice after debugging
-            peer = instance.lower()
+            peer = peer.lower()
             blacklisted = False
             for ddomain in blacklist:
                 if ddomain in peer:
