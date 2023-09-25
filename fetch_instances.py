@@ -85,7 +85,17 @@ async def main():
     peerlist =  await get_peers(domain)
     async with asyncio.TaskGroup() as tg:
         for peer in peerlist[:1000]:
-            tg.create_task(get_response_code(peer))
+            instance = instance.lower()
+
+            blacklisted = False
+            for ddomain in blacklist:
+                if ddomain in instance:
+                    blacklisted = True
+
+            if blacklisted:
+                continue
+
+            #tg.create_task(get_response_code(peer))
 
 
 
