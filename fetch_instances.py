@@ -1,11 +1,11 @@
 from reqto import get
 from hashlib import sha256
-from multiprocessing import Pool, Lock, cpu_count #Processs
+from multiprocessing import Lock, cpu_count, set_start_method, Process #Pool,
 import sqlite3
 import sys
 import json
 
-mutex = Lock()
+#set_start_method("spawn")
 
 def get_hash(domain: str) -> str:
     return sha256(domain.encode("utf-8")).hexdigest()
@@ -44,7 +44,7 @@ def get_type(instdomain: str) -> str:
     except:
         return None
 
-def write_instance(instance: str, c) -> None:
+def write_instance(instance: str, c) -> bool:
     print("run")
     try:
         with mutex:
@@ -63,11 +63,12 @@ def write_instance(instance: str, c) -> None:
                 conn.commit()
     except Exception as e:
         print("error:", e, instance)
+    return True
 
 with open("config.json") as f:
     config = json.loads(f.read())
 
-domain = sys.argv[1]
+domain = "mastodon.de" #sys.argv[1]
 
 blacklist = [
     "activitypub-troll.cf",
@@ -92,8 +93,10 @@ c = conn.cursor()
 c.execute(
     "select domain from instances where 1"
 )
-
-pool = Pool(cpu_count() - 1)
+print("run2")
+#(cpu_count() - 1)
+print("run3")
+mutex = Lock()
 
 #This one will create a pool of processes
 #With the same number as cpus on the host
@@ -112,11 +115,12 @@ for instance in peerlist:
 
     if blacklisted:
         continue
+    print("run1")
+    #p = pool.apply(write_instance, args=[instance, c])
+    #print(p.get())
 
-    p = pool.apply_async(write_instance, args=[instance, c])
-
-    #p = Process(target=write_instance, args=[instance, c])
-    #p.start()
+    p = Process(target=write_instance, args=[instance, c])
+    p.start()
     #Funny story about that
     #Thats a fork bomb do not run that
     #Except for lolz thats why I didnt delete it
