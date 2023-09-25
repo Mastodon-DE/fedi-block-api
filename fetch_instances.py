@@ -19,14 +19,14 @@ async def get_peers(domain: str) -> str:
         async with aiohttp.ClientSession() as session:
             res  = await session.get(f"https://{domain}/api/v1/instance/peers") #, headers=headers, timeout=5, allow_redirects=False)
             resj = await res.json()
-            print(resj)
+            #print(resj)
             return resj
     except Exception as e:
         print(e)
         return None
 
 
-def get_type(instdomain: str) -> str:
+def get_type(instdomain: str, headers) -> str:
     try:
         res = get(f"https://{instdomain}/nodeinfo/2.1.json", headers=headers, timeout=5, allow_redirects=False)
         if res.status_code == 404:
@@ -62,39 +62,40 @@ async def get_response_code(host:str) -> int:
 def write_instance(instance: str, c) -> bool:
     print("run")
     try:
-        with mutex:
-            c.execute(
-                "select domain from instances where domain = ?", (instance,)
-            )
+        c.execute(
+            "select domain from instances where domain = ?", (instance,)
+        )
         if c.fetchone() == None:
             InstType = get_type(instance)
             InstHash = get_hash(instance)
-            with mutex:
-                c.execute(
-                    "insert into instances select ?, ?, ?",
-                    (instance, InstHash, InstType),
-                )
-            with mutex:
-                conn.commit()
+            c.execute(
+                "insert into instances select ?, ?, ?",
+                (instance, InstHash, InstType),
+            )
+            conn.commit()
     except Exception as e:
         print("error:", e, instance)
     return True
 
 async def main():
+    with open("config.json") as f:
+        config = json.loads(f.read())
+    headers = {"user-agent": config["useragent"]}
     domain   = "mastodon.de" #sys.argv[1]
+    conn = sqlite3.connect("blocks.db")
+    c = conn.cursor()
     peerlist =  await get_peers(domain)
+    blacklist = [ "activitypub-troll.cf","gab.best","4chan.icu","social.shrimpcam.pw","mastotroll.netz.org","github.dev", "ngrok.io"]
     async with asyncio.TaskGroup() as tg:
         for peer in peerlist[:1000]:
             instance = instance.lower()
-
             blacklisted = False
             for ddomain in blacklist:
                 if ddomain in instance:
                     blacklisted = True
-
             if blacklisted:
                 continue
-
+    conn.close()
             #tg.create_task(get_response_code(peer))
 
 
