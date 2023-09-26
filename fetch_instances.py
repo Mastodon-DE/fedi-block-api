@@ -10,7 +10,6 @@ import sys
 import json
 
 async def get_hash(domain: str) -> str:
-    print("run1.5")
     return sha256(domain.encode("utf-8")).hexdigest()
 
 async def get_peers(domain: str) -> str:
@@ -53,8 +52,7 @@ async def get_type(instdomain: str) -> str:
             if res.ok:
                 return "mastodon"
     except Exception as e:
-        print("Error")
-        print(e)
+        #print(e)
         return None
 
 async def get_response_code(host:str) -> int:
@@ -63,17 +61,13 @@ async def get_response_code(host:str) -> int:
         print(f"got response code {res.status}")
 
 async def write_instance(instance: str, c) -> bool:
-    print("run")
     try:
         c.execute(
             "select domain from instances where domain = ?", (instance,)
         )
         if c.fetchone() == None:
-            print("run1")
             InstHash = await get_hash(instance)
-            print("run2")
             InstType = await get_type(instance)
-            print("run3")
             c.execute(
                 "insert into instances select ?, ?, ?",
                 (instance, InstHash, InstType),
@@ -98,7 +92,7 @@ async def main():
     peerlist =  await get_peers(domain)
     blacklist = [ "activitypub-troll.cf","gab.best","4chan.icu","social.shrimpcam.pw","mastotroll.netz.org","github.dev", "ngrok.io"]
     async with asyncio.TaskGroup() as tg:
-        for peer in peerlist[:10]: #TODO: Remove slice after debugging
+        for peer in peerlist: #[:1000]:
             peer = peer.lower()
             blacklisted = False
             for ddomain in blacklist:
