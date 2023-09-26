@@ -93,6 +93,7 @@ async def main():
 
             tg.create_task(write_instance(peer, c))
     conn.close()
+    print(f"done with {domain}")
 
 if __name__ == "__main__":
     asyncio.run(main())
