@@ -3,3 +3,6 @@ __pycache__/
 venv/
 config.json
 /config.json
+/Server
+blocks.BAK.db
+test.py

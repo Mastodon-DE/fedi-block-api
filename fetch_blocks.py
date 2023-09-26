@@ -250,7 +250,6 @@ for blocker, software in c.fetchall():
     blockdict = []
     blocker = tidyup(blocker)
     if software == "pleroma":
-        print(blocker)
         try:
             # Blocks
             federation = get(
@@ -336,7 +335,6 @@ for blocker, software in c.fetchall():
         except Exception as e:
             print("error:", e, blocker)
     elif software == "mastodon":
-        print(blocker)
         try:
             # json endpoint for newer mastodongs
             try:
@@ -443,7 +441,6 @@ for blocker, software in c.fetchall():
         except Exception as e:
             print("error:", e, blocker)
     elif software == "friendica" or software == "misskey":
-        print(blocker)
         try:
             if software == "friendica":
                 json = get_friendica_blocks(blocker)
@@ -509,7 +506,6 @@ for blocker, software in c.fetchall():
         except Exception as e:
             print("error:", e, blocker)
     elif software == "gotosocial":
-        print(blocker)
         try:
             # Blocks
             federation = get(
@@ -569,7 +565,6 @@ for blocker, software in c.fetchall():
             print("error:", e, blocker)
     elif software == "lemmy":
         # looks like there's no reason field or obscured domain names yet
-        print(blocker)
         try:
             # Blocks
             federation = get(

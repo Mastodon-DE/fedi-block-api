@@ -9,7 +9,7 @@
  <item>
   <title>{{block['blocker']}} has applied '{{block['block_level']}}' restriction to {{block['blocked']}}</title>
   <description>{{block['reason']}}</description>
-  <link>https://TODO/?reverse={{block['blocker']}}</link>
+  <!--link>https://TODO/?reverse={{block['blocker']}}</link-->
   <pubDate>{{block['first_added']}}</pubDate>
  </item>
  {% endfor %}
