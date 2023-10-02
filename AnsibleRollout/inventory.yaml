@@ -1,0 +1,6 @@
+all:
+  hosts:
+    join-mastodon:
+      ansible_host: join-mastodon.de
+  vars:
+    ansible_user: jenkins

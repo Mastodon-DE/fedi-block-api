@@ -1,0 +1,75 @@
+---
+- name: Update fedi-block-api
+  hosts: "all"
+  tasks:
+    - name: Stop block fetcher service
+      ansible.builtin.systemd_service:
+        name: fedi_block_fetcher
+        state: stopped
+      become: true
+    - name: Stop api service
+      ansible.builtin.systemd_service:
+        name: fedi_block_api
+        state: stopped
+      become: true
+    - name: Backup blocks.db
+      ansible.builtin.copy:
+        src: /opt/fedi-block-api/blocks.db
+        dest: /opt/fedi-block-api/blocks_backup/blocks.db.BAK
+        owner: fba
+        group: fba
+        remote_src: yes
+        force: true
+      become: true
+    - name: Replace api.py
+      ansible.builtin.copy:
+        src: api.py
+        dest: /opt/fedi-block-api/api.py
+        owner: fba
+        group: fba
+        force: true
+      become: true
+    - name: replace fetch_blocks.py
+      ansible.builtin.copy:
+        src: fetch_blocks.py
+        dest: /opt/fedi-block-api/fetch_blocks.py
+        owner: fba
+        group: fba
+        force: true
+      become: true
+    - name: replace fetch_instances.py
+      ansible.builtin.copy:
+        src: fetch_instances.py
+        dest: /opt/fedi-block-api/fetch_instances.py
+        owner: fba
+        group: fba
+        force: true
+      become: true
+    - name: replace index.html
+      ansible.builtin.copy:
+        src: index.html
+        dest: /opt/fedi-block-api/index.html
+        owner: fba
+        group: fba
+        force: true
+      become: true
+    - name: reaplce rss.xml
+      ansible.builtin.copy:
+        src: rss.xml
+        dest: /opt/fedi-block-api/rss.xml
+        owner: fba
+        group: fba
+        force: true
+      become: true
+    - name: Start and enable block fetcher service
+      ansible.builtin.systemd_service:
+        name: fedi_block_fetcher
+        state: started
+        enabled: true
+      become: true
+    - name: Start and enable api service
+      ansible.builtin.systemd_service:
+        name: fedi_block_api
+        state: started
+        enabled: true
+      become: true
